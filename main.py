@@ -1,6 +1,10 @@
 import pygame
 import random
 
+from os import path
+
+img_dir = path.join(path.dirname(__file__), 'img')
+
 WIDTH = 480
 HEIGHT = 600
 FPS = 60
@@ -17,15 +21,17 @@ YELLOW = (255, 255, 0)
 pygame.init()
 pygame.mixer.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("SpaceKiller  ")
+pygame.display.set_caption("SpaceKiller")
 clock = pygame.time.Clock()
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((50, 40))
-        self.image.fill(GREEN)
+        self.image = player_img
         self.rect = self.image.get_rect()
+        self.image.set_colorkey(BLACK)
+        self.image = pygame.transform.scale(player_img, (100, 100))
         self.rect.centerx = WIDTH / 2
         self.rect.bottom = HEIGHT - 10
         self.speedx = 0
@@ -51,8 +57,8 @@ class Player(pygame.sprite.Sprite):
 class Mob(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((30, 40))
-        self.image.fill(RED)
+        self.image = meteor_img
+        self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.rect.x = random.randrange(WIDTH - self.rect.width)
         self.rect.y = random.randrange(-100, -40)
@@ -70,8 +76,8 @@ class Mob(pygame.sprite.Sprite):
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((10, 20))
-        self.image.fill(YELLOW)
+        self.image = bullet_img
+        self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.rect.bottom = y
         self.rect.centerx = x
@@ -82,6 +88,13 @@ class Bullet(pygame.sprite.Sprite):
         # убить, если он заходит за верхнюю часть экрана
         if self.rect.bottom < 0:
             self.kill()
+
+# Загрузка всей игровой графики
+background = pygame.image.load(path.join(img_dir, 'Background1.png')).convert()
+player_img = pygame.image.load(path.join(img_dir, "spaceship1.png")).convert()
+meteor_img = pygame.image.load(path.join(img_dir, "asteroid1.png")).convert()
+bullet_img = pygame.image.load(path.join(img_dir, "bullet.png")).convert()
+background_rect = background.get_rect()
 
 all_sprites = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
@@ -123,6 +136,7 @@ while running:
 
     # Рендеринг
     screen.fill(BLACK)
+    screen.blit(background, background_rect)
     all_sprites.draw(screen)
     # После отрисовки всего, переворачиваем экран
     pygame.display.flip()
