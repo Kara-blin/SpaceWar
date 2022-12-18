@@ -33,6 +33,22 @@ def draw_text(surf, text, size, x, y):
     text_rect.midtop = (x, y)
     surf.blit(text_surface, text_rect)
 
+def newmob():
+    m = Mob()
+    all_sprites.add(m)
+    mobs.add(m)
+
+def draw_shield_bar(surf, x, y, pct):
+    if pct < 0:
+        pct = 0
+    BAR_LENGTH = 100
+    BAR_HEIGHT = 10
+    fill = (pct / 100) * BAR_LENGTH
+    outline_rect = pygame.Rect(x, y, BAR_LENGTH, BAR_HEIGHT)
+    fill_rect = pygame.Rect(x, y, fill, BAR_HEIGHT)
+    pygame.draw.rect(surf, GREEN, fill_rect)
+    pygame.draw.rect(surf, WHITE, outline_rect, 2)
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -44,6 +60,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.centerx = WIDTH / 2
         self.rect.bottom = HEIGHT - 10
         self.speedx = 0
+        self.shield = 100
 
     #pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
 
@@ -126,9 +143,14 @@ class Bullet(pygame.sprite.Sprite):
 
 # Загрузка мелодий игры
 shoot_sound = pygame.mixer.Sound(path.join(snd_dir, 'shootlaser.wav'))
+shoot_sound.set_volume(0.3)
 expl_sounds = []
-for snd in ['boom.wav']:
-    expl_sounds.append(pygame.mixer.Sound(path.join(snd_dir, snd)))
+for snd in ['boom.wav','boom1.wav','boom2.wav']:
+    expl_sound = pygame.mixer.Sound(path.join(snd_dir, snd))
+    expl_sound.set_volume(0.3)
+    expl_sounds.append(expl_sound)
+
+
 pygame.mixer.music.load(path.join(snd_dir, 'Megadrive_-_NARC_Hotline_Miami_2_Wrong_Number_OST_63637466.ogg'))
 pygame.mixer.music.set_volume(0.4)
 # Загрузка всей игровой графики
@@ -147,9 +169,7 @@ bullets = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
 for i in range(8):
-    m = Mob()
-    all_sprites.add(m)
-    mobs.add(m)
+    newmob()
 score = 0
 pygame.mixer.music.play(loops=-1)
 # Цикл игры
@@ -175,19 +195,22 @@ while running:
         score += 50 - hit.radius
         m = Mob()
         random.choice(expl_sounds).play()
-        all_sprites.add(m)
-        mobs.add(m)
+        newmob()
 
     # Проверка, не ударил ли моб игрока
-    hits = pygame.sprite.spritecollide(player, mobs, False, pygame.sprite.collide_circle)
+    hits = pygame.sprite.spritecollide(player, mobs, True, pygame.sprite.collide_circle)
     if hits:
-        running = False
+        player.shield -= hit.radius * 2
+        newmob()
+        if player.shield <= 0:
+            running = False
 
     # Рендеринг
     screen.fill(BLACK)
     screen.blit(background, background_rect)
     all_sprites.draw(screen)
     draw_text(screen, 'SCORE '+str(score), 18, WIDTH / 2, 10)
+    draw_shield_bar(screen, 5, 5, player.shield)
     # После отрисовки всего, переворачиваем экран
     pygame.display.flip()
 
