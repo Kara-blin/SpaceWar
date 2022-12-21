@@ -111,8 +111,8 @@ class Player(pygame.sprite.Sprite):
                 bullets.add(bullet)
                 shoot_sound.play()
             if self.power >= 2:
-                bullet1 = Bullet(self.rect.left, self.rect.centery)
-                bullet2 = Bullet(self.rect.right, self.rect.centery)
+                bullet1 = Bullet(self.rect.left+30, self.rect.centery)
+                bullet2 = Bullet(self.rect.right-30, self.rect.centery)
                 all_sprites.add(bullet1)
                 all_sprites.add(bullet2)
                 bullets.add(bullet1)
@@ -162,7 +162,7 @@ class Mob(pygame.sprite.Sprite):
         self.rotate()
         self.rect.x += self.speedx
         self.rect.y += self.speedy
-        if self.rect.top > HEIGHT + 10 or self.rect.left < -25 or self.rect.right > WIDTH + 20:
+        if self.rect.top > HEIGHT + 10 or self.rect.left < -120 or self.rect.right > WIDTH + 120:
             self.rect.x = random.randrange(WIDTH - self.rect.width)
             self.rect.y = random.randrange(-100, -40)
             self.speedy = random.randrange(1, 8)
@@ -266,7 +266,9 @@ for i in range(3):
     explosion_anim['sm'].append(img_sm)
 
 player_img = pygame.image.load(path.join(img_dir, "spaceship1.png")).convert()
-player_mini_img = pygame.transform.scale(player_img, (25, 25))
+player_img1 = pygame.image.load(path.join(img_dir, "spaceship2.png")).convert()
+player_img2 = pygame.image.load(path.join(img_dir, "spaceship3.png")).convert()
+player_mini_img = pygame.transform.scale(player_img, (45, 45))
 player_mini_img.set_colorkey(BLACK)
 powerups = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
@@ -347,9 +349,17 @@ while running:
         expl = Explosion(hit.rect.center, 'sm')
         all_sprites.add(expl)
         newmob()
+        if 50 <= player.shield < 70:
+            player.image = pygame.transform.scale(player_img1, (100, 100))
+            player.image.set_colorkey(BLACK)
+        if 0 < player.shield < 50:
+            player.image = pygame.transform.scale(player_img2, (100, 100))
+            player.image.set_colorkey(BLACK)
         if player.shield <= 0:
             expl_player = Explosion(player.rect.center, 'lg')
             all_sprites.add(expl_player)
+            player.image = pygame.transform.scale(player_img, (100, 100))
+            player.image.set_colorkey(BLACK)
             player.hide()
             player.lives -= 1
             player.shield = 100
@@ -362,7 +372,15 @@ while running:
         pow_sound.play()
         if hit.type == 'HP':
             player.shield += random.randrange(10, 30)
+            if 50 <= player.shield < 70:
+                player.image = pygame.transform.scale(player_img1, (100, 100))
+                player.image.set_colorkey(BLACK)
+            if 0 < player.shield < 50:
+                player.image = pygame.transform.scale(player_img2, (100, 100))
+                player.image.set_colorkey(BLACK)
             if player.shield >= 100:
+                player.image = pygame.transform.scale(player_img, (100, 100))
+                player.image.set_colorkey(BLACK)
                 player.shield = 100
         if hit.type == 'bullet_upgrade':
             player.powerup()
