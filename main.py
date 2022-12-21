@@ -5,6 +5,7 @@ from os import path
 
 img_dir = path.join(path.dirname(__file__), 'img')
 snd_dir = path.join(path.dirname(__file__), 'soun')
+txt_dir = path.join(path.dirname(__file__), 'txt')
 
 WIDTH = 480
 HEIGHT = 600
@@ -27,6 +28,21 @@ pygame.display.set_caption("SpaceKiller")
 clock = pygame.time.Clock()
 
 font_name = pygame.font.match_font('arial')
+# Запись нового значения в таблицу рекордов
+def new_record(filename, newstate):
+    # Загрузка таблицы рекордов
+    record = open(path.join(txt_dir, filename), 'a+')
+    record.write(newstate+'\n')
+    record.close()
+# Выборка лучшего рекорда
+def best_record(filename):
+    record = open(path.join(txt_dir, filename), 'r')
+    scoreList = record.readlines()
+    scoreList = [line.rstrip() for line in scoreList]
+    #print(scoreList)
+    bestscore = max(scoreList)
+    record.close()
+    return bestscore
 def draw_text(surf, text, size, x, y):
     font = pygame.font.Font(font_name, size)
     text_surface = font.render(text, True, WHITE)
@@ -289,12 +305,13 @@ def show_go_screen():
         draw_text(screen, "Arrow keys move, Space to fire", 22,
                   WIDTH / 2, HEIGHT / 2)
     else:
-        draw_text(screen, "Your last score " + str(score), 18, WIDTH / 2, HEIGHT * 2 / 4)
+        new_record('record.txt',str(score))
+        draw_text(screen, "Your best score " + best_record('record.txt'), 18, WIDTH / 2, HEIGHT * 2 / 4)
 
     pygame.display.flip()
     waiting = True
     while waiting:
-        #clock.tick(FPS)
+        clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -328,9 +345,8 @@ while running:
 
     # Обновление
     all_sprites.update()
-
+    # Проверка, не ударила ли моба пуля
     hits = pygame.sprite.groupcollide(mobs, bullets, True, True, pygame.sprite.collide_circle)
-
     for hit in hits:
         score += 50 - hit.radius
         random.choice(expl_sounds).play()
