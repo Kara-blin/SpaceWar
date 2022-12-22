@@ -7,6 +7,7 @@ img_dir = path.join(path.dirname(__file__), 'img')
 snd_dir = path.join(path.dirname(__file__), 'soun')
 txt_dir = path.join(path.dirname(__file__), 'txt')
 
+#Размеры окна
 WIDTH = 480
 HEIGHT = 600
 FPS = 60
@@ -39,27 +40,30 @@ def best_record(filename):
     record = open(path.join(txt_dir, filename), 'r')
     scoreList = record.readlines()
     scoreList = [line.rstrip() for line in scoreList]
-    #print(scoreList)
+    print(scoreList)
     bestscore = max(scoreList)
     record.close()
     return bestscore
+# Вывод текста на экран
 def draw_text(surf, text, size, x, y):
     font = pygame.font.Font(font_name, size)
     text_surface = font.render(text, True, WHITE)
     text_rect = text_surface.get_rect()
     text_rect.midtop = (x, y)
     surf.blit(text_surface, text_rect)
+# Вывод жизней на экран
 def draw_lives(surf, x, y, lives, img):
     for i in range(lives):
         img_rect = img.get_rect()
         img_rect.x = x + 30 * i
         img_rect.y = y
         surf.blit(img, img_rect)
+# Создание новых мобов на экран
 def newmob():
     m = Mob()
     all_sprites.add(m)
     mobs.add(m)
-
+# Вывод щита на экран
 def draw_shield_bar(surf, x, y, pct):
     if pct < 0:
         pct = 0
@@ -71,6 +75,7 @@ def draw_shield_bar(surf, x, y, pct):
     pygame.draw.rect(surf, GREEN, fill_rect)
     pygame.draw.rect(surf, WHITE, outline_rect, 2)
 
+# Класс игрока
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -116,16 +121,18 @@ class Player(pygame.sprite.Sprite):
         if self.power >= 2 and pygame.time.get_ticks() - self.power_time > POWERUP_TIME:
             self.power -= 1
             self.power_time = pygame.time.get_ticks()
-
+    # функция для стрельбы
     def shoot(self):
         now = pygame.time.get_ticks()
         if now - self.last_shot > self.shoot_delay:
             self.last_shot = now
+            # в случае без улучшения создаёт одну пулю
             if self.power == 1:
                 bullet = Bullet(self.rect.centerx, self.rect.top)
                 all_sprites.add(bullet)
                 bullets.add(bullet)
                 shoot_sound.play()
+                # иначе 2
             if self.power >= 2:
                 bullet1 = Bullet(self.rect.left+30, self.rect.centery)
                 bullet2 = Bullet(self.rect.right-30, self.rect.centery)
@@ -134,7 +141,7 @@ class Player(pygame.sprite.Sprite):
                 bullets.add(bullet1)
                 bullets.add(bullet2)
                 shoot_sound.play()
-
+    # подбор улучшения пули
     def powerup(self):
         self.power += 1
         self.power_time = pygame.time.get_ticks()
@@ -143,7 +150,7 @@ class Player(pygame.sprite.Sprite):
         self.hidden = True
         self.hide_timer = pygame.time.get_ticks()
         self.rect.center = (WIDTH / 2, HEIGHT + 200)
-
+ # Класс астеройда
 class Mob(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -151,17 +158,20 @@ class Mob(pygame.sprite.Sprite):
         self.image_orig.set_colorkey(BLACK)
         self.image = self.image_orig.copy()
         self.rect = self.image.get_rect()
+        # позиция задаётся случайным образом на промежутках
         self.rect.x = random.randrange(WIDTH - self.rect.width)
         self.rect.y = random.randrange(-100, -40)
+        # Так же скорость
         self.speedy = random.randrange(1, 8)
         self.speedx = random.randrange(-3, 3)
         self.rect = self.image.get_rect()
+        # Так же задаётся колизия объекта в виде окружности
         self.radius = int(self.rect.width / 4)
         self.rot = 0
         self.rot_speed = random.randrange(-8, 8)
         self.last_update = pygame.time.get_ticks()
         #pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
-
+ # функция для анимации вращения астеройда
     def rotate(self):
         now = pygame.time.get_ticks()
         if now - self.last_update > 50:
@@ -178,12 +188,13 @@ class Mob(pygame.sprite.Sprite):
         self.rotate()
         self.rect.x += self.speedx
         self.rect.y += self.speedy
+        #Уничтажается если заходит за пределы экрана
         if self.rect.top > HEIGHT + 10 or self.rect.left < -120 or self.rect.right > WIDTH + 120:
             self.rect.x = random.randrange(WIDTH - self.rect.width)
             self.rect.y = random.randrange(-100, -40)
             self.speedy = random.randrange(1, 8)
 
-
+# Класс пули
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -202,7 +213,7 @@ class Bullet(pygame.sprite.Sprite):
         # убить, если он заходит за верхнюю часть экрана
         if self.rect.bottom < 0:
             self.kill()
-
+# класс для создания анимции взрыва
 class Explosion(pygame.sprite.Sprite):
     def __init__(self, center, size):
         pygame.sprite.Sprite.__init__(self)
@@ -226,7 +237,7 @@ class Explosion(pygame.sprite.Sprite):
                 self.image = explosion_anim[self.size][self.frame]
                 self.rect = self.image.get_rect()
                 self.rect.center = center
-
+#Класс бонусов
 class Pow(pygame.sprite.Sprite):
     def __init__(self, center):
         pygame.sprite.Sprite.__init__(self)
@@ -250,12 +261,12 @@ pow_sound.set_volume(0.3)
 expl_sounds = []
 for snd in ['boom.wav','boom1.wav','boom2.wav']:
     expl_sound = pygame.mixer.Sound(path.join(snd_dir, snd))
-    expl_sound.set_volume(0.3)
+    expl_sound.set_volume(0.2)
     expl_sounds.append(expl_sound)
 
 
 pygame.mixer.music.load(path.join(snd_dir, 'Megadrive_-_NARC_Hotline_Miami_2_Wrong_Number_OST_63637466.ogg'))
-pygame.mixer.music.set_volume(0.4)
+pygame.mixer.music.set_volume(0.2)
 # Загрузка всей игровой графики
 background = pygame.image.load(path.join(img_dir, 'Background1.png')).convert()
 player_img = pygame.image.load(path.join(img_dir, "spaceship1.png")).convert()
@@ -296,7 +307,7 @@ for i in range(8):
     newmob()
 score = 0
 pygame.mixer.music.play(loops=-1)
-
+#Меню игры при начале и смерти игрока
 def show_go_screen():
     screen.blit(background, background_rect)
     draw_text(screen, "Space Killer!", 64, WIDTH / 2, HEIGHT / 4)
@@ -365,6 +376,7 @@ while running:
         expl = Explosion(hit.rect.center, 'sm')
         all_sprites.add(expl)
         newmob()
+        # в зависимости от полученного урона меняется внешность корабля
         if 50 <= player.shield < 70:
             player.image = pygame.transform.scale(player_img1, (100, 100))
             player.image.set_colorkey(BLACK)
